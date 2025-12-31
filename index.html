@@ -2,25 +2,36 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đếm ngược Tết 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tết 2026</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
-        canvas { position: absolute; top: 0; left: 0; }
+        /* touch-action: none giúp chặn các thao tác cuộn/zoom thừa trên mobile */
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; touch-action: none; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        /* CSS CHO PHẦN XOAY MÀN HÌNH */
+        /* CSS CHO PHẦN XOAY MÀN HÌNH - CỐ ĐỊNH CHẶT */
         #rotate-message {
-            display: none; /* Mặc định ẩn */
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999999;
-            color: #fff; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0; /* Phủ kín 4 góc */
+            width: 100%; height: 100%;
+            background: #000; 
+            z-index: 9999999;
+            color: #fff; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        #rotate-message h2 { font-size: 5vw; color: gold; margin-bottom: 20px; }
-        #rotate-message i { font-size: 10vw; animation: rotatePhone 2s infinite; }
         
-        /* Chỉ hiện khi là màn hình dọc và kích thước nhỏ (điện thoại/tablet nhỏ) */
-        @media screen and (orientation: portrait) and (max-width: 900px) {
+        /* Chỉnh font chữ thông báo vừa phải, dễ đọc, không dùng vw quá lớn */
+        #rotate-message h2 { font-size: 24px; color: gold; margin-bottom: 20px; line-height: 1.5; }
+        #rotate-message i { font-size: 60px; animation: rotatePhone 2s infinite; color: white; }
+        
+        /* Chỉ hiện khi màn hình dọc */
+        @media screen and (orientation: portrait) {
             #rotate-message { display: flex; }
         }
 
@@ -32,19 +43,19 @@
 
         #btn-greeting {
             position: absolute; top: 20px; right: 20px;
-            padding: 12px 25px; background: rgba(200, 0, 0, 0.9);
+            padding: 10px 20px; background: rgba(200, 0, 0, 0.9);
             color: #fff; border: 2px solid gold; border-radius: 50px;
             cursor: pointer; z-index: 100; font-weight: bold; text-decoration: none;
-            box-shadow: 0 0 15px gold; font-family: sans-serif;
+            box-shadow: 0 0 15px gold; font-family: sans-serif; font-size: 14px;
         }
 
         #btn-final {
             position: absolute; bottom: 15%; left: 50%;
             transform: translateX(-50%);
-            padding: 15px 40px; background: linear-gradient(45deg, #ff00cc, #3333ff);
-            color: #fff; font-size: 20px; border: none; border-radius: 50px;
+            padding: 15px 30px; background: linear-gradient(45deg, #ff00cc, #3333ff);
+            color: #fff; font-size: 18px; border: none; border-radius: 50px;
             cursor: pointer; z-index: 100; display: none;
-            box-shadow: 0 0 20px #ff00cc; animation: pulse 1s infinite; font-weight: bold;
+            box-shadow: 0 0 20px #ff00cc; animation: pulse 1s infinite; font-weight: bold; white-space: nowrap;
         }
         @keyframes pulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.05); } 100% { transform: translateX(-50%) scale(1); } }
     </style>
@@ -60,11 +71,11 @@
     <canvas id="countdown-canvas"></canvas>
 
     <audio id="bg-music" loop>
-        <source src="image/nhac1.mp3" type="audio/mp3">
+        <source src="image/nhac.mp3" type="audio/mp3">
     </audio>
 
-    <a id="btn-greeting" href="#" onclick="goToGreeting()">💌 Xem Thiệp Chúc Mừng</a>
-    <button id="btn-final" onclick="window.location.href='fireworks.html'">🎆 XEM PHÁO HOA GIAO THỪA 🎆</button>
+    <a id="btn-greeting" href="#" onclick="goToGreeting()">💌 Xem Thiệp</a>
+    <button id="btn-final" onclick="window.location.href='fireworks.html'">🎆 XEM PHÁO HOA 🎆</button>
 
     <script>
         // Tự động phát nhạc
@@ -142,6 +153,7 @@
         }
 
         let lastTimeParts = ["", "", "", ""];
+        
         function getTextPoints(timeParts) {
             const tmpCanvas = document.createElement('canvas');
             const tmpCtx = tmpCanvas.getContext('2d');
@@ -149,17 +161,26 @@
             const h = window.innerHeight;
             tmpCanvas.width = w; tmpCanvas.height = h;
             
-            let fontSize = w / 9; if (fontSize > 160) fontSize = 160;
+            // --- ĐÃ CHỈNH SỬA: GIẢM CỠ CHỮ ---
+            // Trước đây là w / 9, giờ giảm xuống w / 11 để chữ nhỏ lại -> khoảng cách rộng ra
+            let fontSize = w / 11; 
+            
+            // Giới hạn max font size nhỏ hơn một chút để đẹp trên màn hình to
+            if (fontSize > 130) fontSize = 130;
+            
             tmpCtx.font = `900 ${fontSize}px "Arial Black", Arial, sans-serif`; 
             tmpCtx.fillStyle = "white";
             tmpCtx.textAlign = "center";
             tmpCtx.textBaseline = "middle";
             
+            // Vị trí vẫn chia đều, nhưng do chữ nhỏ lại nên cảm giác sẽ thoáng hơn
             const positions = [w * 0.2, w * 0.4, w * 0.6, w * 0.8];
             timeParts.forEach((text, index) => tmpCtx.fillText(text, positions[index], h/2));
             
             const points = [];
             const imgData = tmpCtx.getImageData(0, 0, w, h).data;
+            
+            // Tăng gap lên 6 hoặc 7 để giảm bớt số lượng hạt, giúp nhìn thoáng hơn nữa
             const gap = 6; 
             for (let y = 0; y < h; y += gap) {
                 for (let x = 0; x < w; x += gap) {
