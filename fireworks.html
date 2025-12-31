@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy New Year 2026</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; cursor: pointer; }
+        canvas { display: block; }
+        
+        #message {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; font-family: 'Arial', cursive; text-align: center;
+            /* Để click được vào nút bên trong, ta bỏ pointer-events: none ở cha hoặc set auto ở con */
+            pointer-events: none; 
+            mix-blend-mode: normal; /* Đổi sang normal để nút bấm hiển thị rõ màu */
+            z-index: 100;
+            width: 100%;
+        }
+        
+        h1 { 
+            font-size: 6vw; /* Chữ nhỏ theo yêu cầu */
+            margin: 0; 
+            text-shadow: 0 0 20px #ff00de, 0 0 40px #ff00de; 
+            animation: glow 2s infinite alternate; 
+            mix-blend-mode: screen; /* Hiệu ứng hòa trộn cho chữ */
+        }
+        
+        h2 { 
+            font-size: 3vw; 
+            margin: 0; 
+            color: #ffd700; 
+            text-shadow: 0 0 10px #ffd700;
+            mix-blend-mode: screen;
+        }
+        
+        @keyframes glow { from { text-shadow: 0 0 10px #fff, 0 0 20px #ff00de; } to { text-shadow: 0 0 20px #fff, 0 0 40px #ff00de; } }
+
+        /* Nút bấm kích hoạt nhạc */
+        #btn-play {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(45deg, #ff00cc, #3333ff);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px #ff00cc;
+            animation: pulseBtn 1s infinite;
+            pointer-events: auto; /* Quan trọng: Cho phép click vào nút */
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+        }
+        
+        @keyframes pulseBtn {
+            0% { transform: scale(1); box-shadow: 0 0 10px #ff00cc; }
+            50% { transform: scale(1.1); box-shadow: 0 0 30px #ff00cc; }
+            100% { transform: scale(1); box-shadow: 0 0 10px #ff00cc; }
+        }
+    </style>
+</head>
+<body>
+    <div id="message">
+        <h1>HAPPY NEW YEAR</h1>
+        <h2>2026</h2>
+        <button id="btn-play">🎆 BẤM ĐỂ BẮT ĐẦU 🎉</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+    
+    <audio id="firework-audio" loop>
+        <source src="image/phaohoa.mp3" type="audio/mp3">
+    </audio>
+
+    <script>
+        // Xử lý nút bấm
+        var btnPlay = document.getElementById("btn-play");
+        var audio = document.getElementById("firework-audio");
+
+        btnPlay.addEventListener('click', function() {
+            // 1. Phát nhạc
+            audio.play().then(() => {
+                console.log("Audio playing...");
+            }).catch(e => {
+                console.log("Audio play failed:", e);
+            });
+
+            // 2. Ẩn nút đi
+            this.style.display = 'none';
+        });
+
+        // Vẫn giữ click body để backup
+        document.body.addEventListener('click', function() {
+            if(audio.paused && btnPlay.style.display === 'none') {
+                audio.play();
+            }
+        });
+
+        // --- CODE PHÁO HOA ---
+        window.requestAnimFrame = (function() {
+            return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); };
+        })();
+
+        var canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'),
+            cw = window.innerWidth, ch = window.innerHeight,
+            fireworks = [], particles = [], hue = 120, limiterTotal = 5, limiterTick = 0, timerTotal = 15, timerTick = 0, mousedown = false, mx, my;
+
+        canvas.width = cw; canvas.height = ch;
+
+        function random(min, max) { return Math.random() * (max - min) + min; }
+        function calculateDistance(p1x, p1y, p2x, p2y) { return Math.sqrt(Math.pow(p1x - p2x, 2) + Math.pow(p1y - p2y, 2)); }
+
+        function Firework(sx, sy, tx, ty, type = 'normal') {
+            this.x = sx; this.y = sy; this.sx = sx; this.sy = sy;
+            this.tx = tx; this.ty = ty; this.distanceToTarget = calculateDistance(sx, sy, tx, ty);
+            this.distanceTraveled = 0; this.coordinates = []; this.coordinateCount = 3;
+            while (this.coordinateCount--) { this.coordinates.push([this.x, this.y]); }
+            this.angle = Math.atan2(ty - sy, tx - sx); this.speed = 2; this.acceleration = 1.05; this.brightness = random(50, 70); this.targetRadius = 1;
+            this.type = type; 
+        }
+
+        Firework.prototype.update = function(index) {
+            this.coordinates.pop(); this.coordinates.unshift([this.x, this.y]);
+            if (this.targetRadius < 8) this.targetRadius += 0.3; else this.targetRadius = 1;
+            this.speed *= this.acceleration;
+            var vx = Math.cos(this.angle) * this.speed, vy = Math.sin(this.angle) * this.speed;
+            this.distanceTraveled = calculateDistance(this.sx, this.sy, this.x + vx, this.y + vy);
+            if (this.distanceTraveled >= this.distanceToTarget) {
+                createParticles(this.tx, this.ty, this.type); 
+                fireworks.splice(index, 1);
+            } else { this.x += vx; this.y += vy; }
+        }
+
+        Firework.prototype.draw = function() {
+            ctx.beginPath(); ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+            ctx.lineTo(this.x, this.y); ctx.strokeStyle = 'hsl(' + hue + ', 100%, ' + this.brightness + '%)'; ctx.stroke();
+        }
+
+        function Particle(x, y, type) {
+            this.x = x; this.y = y; 
+            this.coordinates = []; 
+            this.coordinateCount = 5;
+            
+            if (type === 'big_cluster') {
+                this.coordinateCount = 3; 
+            }
+
+            while (this.coordinateCount--) { this.coordinates.push([this.x, this.y]); }
+            
+            this.angle = random(0, Math.PI * 2); 
+            
+            if (type === 'big_cluster') {
+                this.speed = random(1, 22); 
+                this.friction = 0.96;       
+                this.hue = random(0, 360);  
+                this.brightness = random(60, 90); 
+                this.decay = random(0.01, 0.02);  
+            } else {
+                this.speed = random(1, 15); 
+                this.friction = 0.95; 
+                this.hue = random(hue - 50, hue + 50); 
+                this.brightness = random(50, 80); 
+                this.decay = random(0.015, 0.03);
+            }
+            
+            this.gravity = 1; 
+            this.alpha = 1; 
+        }
+
+        Particle.prototype.update = function(index) {
+            this.coordinates.pop(); this.coordinates.unshift([this.x, this.y]);
+            this.speed *= this.friction; this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed + this.gravity;
+            this.alpha -= this.decay;
+            if (this.alpha <= this.decay) particles.splice(index, 1);
+        }
+
+        Particle.prototype.draw = function() {
+            ctx.beginPath(); ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+            ctx.lineTo(this.x, this.y); ctx.strokeStyle = 'hsla(' + this.hue + ', 100%, ' + this.brightness + '%, ' + this.alpha + ')'; ctx.stroke();
+        }
+
+        function createParticles(x, y, type) {
+            var particleCount = (type === 'big_cluster') ? 400 : 100;
+            while (particleCount--) particles.push(new Particle(x, y, type));
+        }
+
+        function loop() {
+            requestAnimFrame(loop);
+            hue += 0.5;
+            ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fillRect(0, 0, cw, ch);
+            ctx.globalCompositeOperation = 'lighter';
+            var i = fireworks.length; while (i--) { fireworks[i].draw(); fireworks[i].update(i); }
+            var i = particles.length; while (i--) { particles[i].draw(); particles[i].update(i); }
+            
+            if (timerTick >= timerTotal) {
+                var tx = random(0, cw);
+                var ty = random(0, ch / 2);
+                var type = (Math.random() < 0.4) ? 'big_cluster' : 'normal';
+                
+                fireworks.push(new Firework(cw / 2, ch, tx, ty, type));
+                fireworks.push(new Firework(cw / 2, ch, random(0, cw), random(0, ch / 2), 'normal'));
+                
+                timerTick = 0;
+            } else { timerTick++; }
+        }
+        window.onload = loop;
+    </script>
+</body>
+</html>

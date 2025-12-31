@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đếm ngược Tết 2026</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
+        canvas { position: absolute; top: 0; left: 0; }
+        
+        /* CSS CHO PHẦN XOAY MÀN HÌNH */
+        #rotate-message {
+            display: none; /* Mặc định ẩn */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999999;
+            color: #fff; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+        }
+        #rotate-message h2 { font-size: 5vw; color: gold; margin-bottom: 20px; }
+        #rotate-message i { font-size: 10vw; animation: rotatePhone 2s infinite; }
+        
+        /* Chỉ hiện khi là màn hình dọc và kích thước nhỏ (điện thoại/tablet nhỏ) */
+        @media screen and (orientation: portrait) and (max-width: 900px) {
+            #rotate-message { display: flex; }
+        }
+
+        @keyframes rotatePhone {
+            0%, 10% { transform: rotate(0deg); }
+            40%, 60% { transform: rotate(90deg); }
+            90%, 100% { transform: rotate(0deg); }
+        }
+
+        #btn-greeting {
+            position: absolute; top: 20px; right: 20px;
+            padding: 12px 25px; background: rgba(200, 0, 0, 0.9);
+            color: #fff; border: 2px solid gold; border-radius: 50px;
+            cursor: pointer; z-index: 100; font-weight: bold; text-decoration: none;
+            box-shadow: 0 0 15px gold; font-family: sans-serif;
+        }
+
+        #btn-final {
+            position: absolute; bottom: 15%; left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 40px; background: linear-gradient(45deg, #ff00cc, #3333ff);
+            color: #fff; font-size: 20px; border: none; border-radius: 50px;
+            cursor: pointer; z-index: 100; display: none;
+            box-shadow: 0 0 20px #ff00cc; animation: pulse 1s infinite; font-weight: bold;
+        }
+        @keyframes pulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.05); } 100% { transform: translateX(-50%) scale(1); } }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="rotate-message">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <h2>Vui lòng quay ngang điện thoại<br>để xem đẹp nhất!</h2>
+    </div>
+
+    <canvas id="bg-fireworks"></canvas>
+    <canvas id="countdown-canvas"></canvas>
+
+    <audio id="bg-music" loop>
+        <source src="image/nhac1.mp3" type="audio/mp3">
+    </audio>
+
+    <a id="btn-greeting" href="#" onclick="goToGreeting()">💌 Xem Thiệp Chúc Mừng</a>
+    <button id="btn-final" onclick="window.location.href='fireworks.html'">🎆 XEM PHÁO HOA GIAO THỪA 🎆</button>
+
+    <script>
+        // Tự động phát nhạc
+        const audio = document.getElementById("bg-music");
+        window.addEventListener('load', () => audio.play().catch(() => {}));
+        document.body.addEventListener('click', () => { if(audio.paused) audio.play(); });
+
+        function goToGreeting() {
+            window.location.href = `intro.html?t=${audio.currentTime}`;
+        }
+
+        const targetDate = new Date("Jan 1, 2026 00:00:00").getTime();
+        const canvas = document.getElementById("countdown-canvas");
+        const ctx = canvas.getContext("2d");
+        
+        let pixelRatio = window.devicePixelRatio || 1;
+        let particles = [];
+        
+        function resize() {
+            canvas.width = window.innerWidth * pixelRatio;
+            canvas.height = window.innerHeight * pixelRatio;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            ctx.scale(pixelRatio, pixelRatio);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor(x, y) {
+                this.x = Math.random() * window.innerWidth;
+                this.y = Math.random() * window.innerHeight;
+                this.destX = x; this.destY = y;
+                this.color = `hsl(${Math.random() * 50 + 15}, 100%, 60%)`; 
+                this.atDest = false;
+            }
+            update() {
+                if (this.atDest) {
+                    if (Math.abs(this.destX - this.x) > 0.5 || Math.abs(this.destY - this.y) > 0.5) this.atDest = false;
+                    else return;
+                }
+                const dx = this.destX - this.x;
+                const dy = this.destY - this.y;
+                this.x += dx * 0.15;
+                this.y += dy * 0.15;
+                if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+                    this.x = this.destX; this.y = this.destY; this.atDest = true;
+                }
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function getTimeParts() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+            if (distance > 0 && distance < 60000) {
+                document.getElementById('btn-final').style.display = 'block';
+                document.getElementById('btn-final').innerText = `🔥 CÒN ${Math.floor(distance/1000)}s - SẮP GIAO THỪA RỒI 🔥`;
+            } else if (distance <= 0) {
+                 document.getElementById('btn-final').style.display = 'block';
+                 document.getElementById('btn-final').innerText = "🎆 CHÚC MỪNG NĂM MỚI 🎆";
+                 return ["00", "00", "00", "00"];
+            }
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+            const pad = (n) => n < 10 ? '0' + n : n;
+            return [`${pad(d)}d`, `${pad(h)}h`, `${pad(m)}m`, `${pad(s)}s`];
+        }
+
+        let lastTimeParts = ["", "", "", ""];
+        function getTextPoints(timeParts) {
+            const tmpCanvas = document.createElement('canvas');
+            const tmpCtx = tmpCanvas.getContext('2d');
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            tmpCanvas.width = w; tmpCanvas.height = h;
+            
+            let fontSize = w / 9; if (fontSize > 160) fontSize = 160;
+            tmpCtx.font = `900 ${fontSize}px "Arial Black", Arial, sans-serif`; 
+            tmpCtx.fillStyle = "white";
+            tmpCtx.textAlign = "center";
+            tmpCtx.textBaseline = "middle";
+            
+            const positions = [w * 0.2, w * 0.4, w * 0.6, w * 0.8];
+            timeParts.forEach((text, index) => tmpCtx.fillText(text, positions[index], h/2));
+            
+            const points = [];
+            const imgData = tmpCtx.getImageData(0, 0, w, h).data;
+            const gap = 6; 
+            for (let y = 0; y < h; y += gap) {
+                for (let x = 0; x < w; x += gap) {
+                    if (imgData[(y * w + x) * 4 + 3] > 128) points.push({x, y});
+                }
+            }
+            return points;
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width / pixelRatio, canvas.height / pixelRatio);
+            const currentTimeParts = getTimeParts();
+            const timeString = currentTimeParts.join("");
+            const lastString = lastTimeParts.join("");
+            
+            if (timeString !== lastString || particles.length === 0) {
+                const points = getTextPoints(currentTimeParts);
+                points.sort((a, b) => a.y - b.y || a.x - b.x);
+                if (particles.length < points.length) {
+                    const diff = points.length - particles.length;
+                    for(let i=0; i<diff; i++) particles.push(new Particle(window.innerWidth/2, window.innerHeight/2));
+                } else if (particles.length > points.length) {
+                    particles.splice(points.length);
+                }
+                for (let i = 0; i < points.length; i++) {
+                    particles[i].destX = points[i].x; particles[i].destY = points[i].y;
+                    particles[i].atDest = false;
+                }
+                lastTimeParts = currentTimeParts;
+            }
+            particles.forEach(p => { p.update(); p.draw(); });
+            updateBgFireworks();
+            requestAnimationFrame(animate);
+        }
+
+        const bgCanvas = document.getElementById('bg-fireworks');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgParticles = [];
+        function resizeBg() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeBg);
+        resizeBg();
+
+        function createFirework() {
+            const x = Math.random() * bgCanvas.width;
+            const y = Math.random() * bgCanvas.height / 2;
+            const hues = [0, 30, 60, 120, 240, 300];
+            const hue = hues[Math.floor(Math.random() * hues.length)];
+            for(let i=0; i<60; i++) { 
+                bgParticles.push({
+                    x: x, y: y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+                    life: Math.random() * 50 + 50, color: `hsl(${hue}, 100%, 60%)`
+                });
+            }
+        }
+        function updateBgFireworks() {
+            if(Math.random() < 0.08) createFirework();
+            bgCtx.globalCompositeOperation = 'destination-out';
+            bgCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgCtx.globalCompositeOperation = 'lighter';
+            for(let i=bgParticles.length-1; i>=0; i--) {
+                const p = bgParticles[i];
+                p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life--;
+                bgCtx.fillStyle = p.color; bgCtx.fillRect(p.x, p.y, 3, 3);
+                if(p.life <= 0) bgParticles.splice(i, 1);
+            }
+        }
+        animate();
+    </script>
+</body>
+</html>
