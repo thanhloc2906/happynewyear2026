@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="website icon" type="png" href="image/horse.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="intro.css">
     <title>Happy New Year 2026</title>
@@ -12,6 +12,34 @@
         .box-button { z-index: 9999; }
         .box-button button { cursor: pointer; }
         
+        /* --- CSS MÀN HÌNH XOAY NGANG (Giống index.html) --- */
+        #rotate-message {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+            background: #000; 
+            z-index: 99999999; /* Luôn nằm trên cùng */
+            color: #fff; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #rotate-message h2 { font-size: 24px; color: gold; margin-bottom: 20px; line-height: 1.5; font-family: sans-serif; }
+        #rotate-message i { font-size: 60px; animation: rotatePhone 2s infinite; color: white; }
+        
+        @media screen and (orientation: portrait) {
+            #rotate-message { display: flex; }
+        }
+        @keyframes rotatePhone {
+            0%, 10% { transform: rotate(0deg); }
+            40%, 60% { transform: rotate(90deg); }
+            90%, 100% { transform: rotate(0deg); }
+        }
+
         /* CSS cho nút Xem Pháo Hoa trong thư */
         .btn-check-fireworks {
             margin-top: 15px;
@@ -26,9 +54,7 @@
             transition: transform 0.2s;
             animation: pulseBtn 1.5s infinite;
         }
-        .btn-check-fireworks:hover {
-            transform: scale(1.1);
-        }
+        .btn-check-fireworks:hover { transform: scale(1.1); }
         @keyframes pulseBtn {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 204, 0.7); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 0, 204, 0); }
@@ -37,8 +63,13 @@
     </style>
 </head>
 <body>
+    <div id="rotate-message">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <h2>Vui lòng quay ngang điện thoại<br>để mở thiệp đẹp nhất!</h2>
+    </div>
+
     <a href="index.html" style="position: fixed; top: 15px; left: 15px; z-index: 999999; padding: 10px 20px; background: rgba(255,255,255,0.8); color: #d00; border-radius: 20px; text-decoration: none; font-weight: bold; font-family: sans-serif; border: 2px solid #d00;">
-        <i class="fa-solid fa-arrow-left"></i> Về Trang Chủ
+        <i class="fa-solid fa-arrow-left"></i> Về Đếm Ngược
     </a>
 
     <div class="box-slider">
@@ -164,9 +195,8 @@
                             <h3>Người gửi: Thanhloc</h3>
                             
                             <button class="btn-check-fireworks" onclick="checkTimeAndGo()">
-                                🎆 ĐÓN GIAO THỪA 🎆
+                                 ĐÓN GIAO THỪA 
                             </button>
-
                         </div>
                     </div>
                 </div>
@@ -181,41 +211,24 @@
 
     <script src="./data.js"></script>
     <script>
-        // --- HÀM KIỂM TRA THỜI GIAN ĐỂ CHUYỂN TRANG ---
         function checkTimeAndGo() {
-            // Mốc Giao Thừa: 00:00:00 ngày 1/1/2026
             const targetTime = new Date("Jan 1, 2026 00:00:00").getTime();
             const now = new Date().getTime();
-            
-            // Tính khoảng cách (ms)
-            // Nếu > 0: Chưa đến giao thừa
-            // Nếu <= 0: Đã qua giao thừa
             const diff = targetTime - now;
 
-            // Quy đổi: 1 phút = 60000ms
-            // Khoảng 11:58 đến 11:59:59 (còn 2 phút hoặc ít hơn)
-            const isNearMidnight = (diff > 0 && diff <= 120000); // 2 phút cuối cùng
-            
-            // Khoảng 00:00 đến 00:05 (đã qua giao thừa tối đa 5 phút)
-            const isFireworksTime = (diff <= 0 && diff >= -300000); // 5 phút đầu năm mới
+            const isNearMidnight = (diff > 0 && diff <= 120000); 
+            const isFireworksTime = (diff <= 0 && diff >= -300000); 
 
             if (isNearMidnight) {
-                // TRƯỜNG HỢP: 11:58 - 11:59 -> Đuổi về trang chủ
-                alert("Sắp đến Giao Thừa rồi! Hãy quay lại màn hình chính để cùng đếm ngược những giây cuối cùng nhé! ⏱️");
+                alert("Sắp đến Giao Thừa rồi! Hãy quay lại màn hình chính để cùng đếm ngược những giây cuối cùng của năm 2025 nhé! ⏱️");
                 window.location.href = "index.html";
-            } 
-            else if (isFireworksTime) {
-                // TRƯỜNG HỢP: 00:00 - 00:05 -> Cho xem pháo hoa
+            } else if (isFireworksTime) {
                 window.location.href = "fireworks.html";
-            } 
-            else {
-                // Các trường hợp khác (Chưa đến giờ hoặc đã qua lâu)
+            } else {
                 if (diff > 0) {
-                     // Nếu chưa đến giờ (ví dụ mới 10h tối), cũng đuổi về trang chủ cho đúng quy trình
-                     alert("Chưa đến giờ Giao Thừa đâu! Quay lại trang chủ xem đồng hồ đếm ngược nhé rồi đợi 00h xem pháo hoa cùng mình nhé<3<3🫰");
+                     alert("Chưa đến giờ Giao Thừa đâu! Quay lại trang chủ xem đồng hồ đếm ngược và đón giao thừa cùng mình nhé.<3<3");
                      window.location.href = "index.html";
                 } else {
-                     // Nếu đã qua lâu rồi (ví dụ sáng mùng 1), cho xem pháo hoa luôn
                      window.location.href = "fireworks.html";
                 }
             }
@@ -230,17 +243,21 @@
         ];
         document.getElementById("message-content").innerText = wishes[Math.floor(Math.random() * wishes.length)];
 
-        // --- XỬ LÝ NHẠC ---
+        // --- NHẠC ---
         const audio = document.getElementById("song");
         const urlParams = new URLSearchParams(window.location.search);
         const startTime = parseFloat(urlParams.get('t')) || 0;
         
         if (audio) {
             audio.currentTime = startTime;
-            audio.play().catch(e => console.log("Chờ tương tác để phát nhạc"));
+            // Cố gắng phát nhạc tiếp
+            var playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => { console.log("Auto-play was prevented"); });
+            }
         }
 
-        // --- XỬ LÝ GIAO DIỆN ---
+        // --- INTERACTION ---
         document.addEventListener('DOMContentLoaded', function() {
             var openBtn = document.getElementById('btn-open-letter');
             
